@@ -1,77 +1,111 @@
 /**********************************************************************************
-* (c) 2016, Nathanael Anderson.
-* Licensed under the MIT license.
-*
-* Version 1.0.0                                        nathan@master-technology.com
-**********************************************************************************/
-'use strict';
+ * (c) 2016, Nathanael Anderson.
+ * Licensed under the MIT license.
+ *
+ * Version 1.0.0                                        nathan@master-technology.com
+ **********************************************************************************/
+"use strict";
 
 /* global android, UIKeyboardDidShowNotification, UIKeyboardDidHideNotification */
 
-
-var frame = require('ui/frame');
+const Frame = require("ui/frame").Frame;
+var previousListener = null;
 
 function trackAndroidKeyboard() {
-    if (!frame.topmost()) { setTimeout(trackAndroidKeyboard, 100); return; }
-    if (!frame.topmost().currentPage) { setTimeout(trackAndroidKeyboard, 100); return; }
+  if (!Frame.topmost()) {
+    setTimeout(trackAndroidKeyboard, 100);
+    return;
+  }
+  if (!Frame.topmost().currentPage) {
+    setTimeout(trackAndroidKeyboard, 100);
+    return;
+  }
 
-    var cv = frame.topmost().currentPage.android;
+  if (previousListener !== null) {
+    global.cv
+      .getViewTreeObserver()
+      .removeOnGlobalLayoutListener(previousListener);
+    previousListener = null;
+  }
 
-    cv.getViewTreeObserver().addOnGlobalLayoutListener(new android.view.ViewTreeObserver.OnGlobalLayoutListener({
-        onGlobalLayout: function () {
-            // Grab the Current Screen Height
-            var rect = new android.graphics.Rect();
-            cv.getWindowVisibleDisplayFrame(rect);
-            var screenHeight = cv.getRootView().getHeight();
-            var missingSize = screenHeight-rect.bottom;
+  global.cv = Frame.topmost().currentPage.android;
 
+  const listener = new android.view.ViewTreeObserver.OnGlobalLayoutListener({
+    onGlobalLayout: function() {
+      // Grab the Current Screen Height
+      var rect = new android.graphics.Rect();
+      global.cv.getWindowVisibleDisplayFrame(rect);
+      var screenHeight = global.cv.getRootView().getHeight();
+      var missingSize = screenHeight - rect.bottom;
 
-            if (missingSize > (screenHeight * 0.15)) {
-                notifyKeyboard(true);
-            } else {
-                notifyKeyboard(false);
-            }
-        }
-    }));
+      if (missingSize > screenHeight * 0.15) {
+        notifyKeyboard(true);
+      } else {
+        notifyKeyboard(false);
+      }
+    }
+  });
+
+  global.cv.getViewTreeObserver().addOnGlobalLayoutListener(listener);
+  previousListener = listener;
 }
-
 
 function trackiOSKeyboard() {
-    var application = require('application');
-    application.ios.addNotificationObserver(UIKeyboardDidShowNotification, function() {
-        notifyKeyboard(true);
-    });
-    application.ios.addNotificationObserver(UIKeyboardDidHideNotification, function() {
-        notifyKeyboard(false);
-    });
+  var application = require("application");
+  application.ios.addNotificationObserver(
+    UIKeyboardDidShowNotification,
+    function() {
+      notifyKeyboard(true);
+    }
+  );
+  application.ios.addNotificationObserver(
+    UIKeyboardDidHideNotification,
+    function() {
+      notifyKeyboard(false);
+    }
+  );
 }
 
-
-if (global.android) {
+function startTracking() {
+  if (global.android) {
     trackAndroidKeyboard();
-} else {
+  } else {
     trackiOSKeyboard();
+  }
 }
-
+startTracking();
 
 var lastNotification = false;
 function notifyKeyboard(isShown) {
-    if (isShown === lastNotification) { return; }
-    // For a notification to occur, the frame, topmost() and currentPage has to exist; so we won't bother checking again...
-    var currentPage = frame.topmost().currentPage;
-    lastNotification = isShown;
+  if (isShown === lastNotification) {
+    return;
+  }
+  // For a notification to occur, the frame, topmost() and currentPage has to exist; so we won't bother checking again...
+  var currentPage = Frame.topmost().currentPage;
+  lastNotification = isShown;
 
-    if (currentPage.exports && typeof currentPage.exports.onKeyboard === "function") {
-        currentPage.exports.onKeyboard({showing: isShown, object: currentPage});
-    }
+  if (
+    currentPage.exports &&
+    typeof currentPage.exports.onKeyboard === "function"
+  ) {
+    currentPage.exports.onKeyboard({ showing: isShown, object: currentPage });
+  }
 
+  for (let cb of notifyKeyboardActions) {
+    cb({ showing: isShown, object: currentPage });
+  }
 }
 
-function isShowing() {
+var notifyKeyboardActions = [];
+
+export default {
+  isShowing: function() {
     return lastNotification;
-}
-
-exports.isShowing = isShowing;
-
-
-
+  },
+  addNotifyKeyboardAction: function(callback) {
+    notifyKeyboardActions.push(callback);
+  },
+  refreshListener: function() {
+    startTracking();
+  }
+};
