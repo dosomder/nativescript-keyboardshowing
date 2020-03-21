@@ -1,6 +1,6 @@
 {
     "name": "nativescript-keyboardshowing",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "description": "Find out if keyboard is showing and fires events when keyboard shows or hides.",
     "main": "index.js",
     "typings": "index.d.ts",
@@ -12,7 +12,7 @@
     },
     "repository": {
         "type": "git",
-        "url": "https://git.proplugins.org/nathanaela/nativescript-keyboardshowing.git"
+        "url": "https://github.com/dosomder/nativescript-keyboardshowing.git"
     },
     "keywords": [
         "NativeScript",
@@ -29,9 +29,9 @@
     },
     "license": "Unsupported",
     "bugs": {
-        "url": "https://git.proplugins.org/nathanaela/nativescript-keyboardshowing/issues"
+        "url": "https://github.com/dosomder/nativescript-keyboardshowing/issues"
     },
-    "homepage": "https://git.proplugins.org/nathanaela/nativescript-keyboardshowing",
+    "homepage": "https://github.com/dosomder/nativescript-keyboardshowing.git",
     "readmeFilename": "README.md",
     "scripts": {
         "demo.ios": "npm run preparedemo && cd demo && tns emulate ios",
@@ -40,7 +40,6 @@
         "debug.android": "npm run preparedemo && cd demo && tns debug android --emulator",
         "preparedemo": "cd demo && tns plugin remove nativescript-keyboardshowing && tns plugin add .. && tns install",
         "setup": "cd demo && npm install && tns plugin add .. && cd ..",
-        "postinstall": "node postinstall.js || echo \"ignore\"",
         "start": "npm run demo.android"
     }
 }
