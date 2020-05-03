@@ -31,7 +31,7 @@ function trackAndroidKeyboard() {
   global.cv = Frame.topmost().currentPage.android;
 
   const listener = new android.view.ViewTreeObserver.OnGlobalLayoutListener({
-    onGlobalLayout: function() {
+    onGlobalLayout: function () {
       // Grab the Current Screen Height
       var rect = new android.graphics.Rect();
       global.cv.getWindowVisibleDisplayFrame(rect);
@@ -43,7 +43,7 @@ function trackAndroidKeyboard() {
       } else {
         notifyKeyboard(false);
       }
-    }
+    },
   });
 
   global.cv.getViewTreeObserver().addOnGlobalLayoutListener(listener);
@@ -54,13 +54,13 @@ function trackiOSKeyboard() {
   var application = require("application");
   application.ios.addNotificationObserver(
     UIKeyboardDidShowNotification,
-    function() {
+    function () {
       notifyKeyboard(true);
     }
   );
   application.ios.addNotificationObserver(
     UIKeyboardDidHideNotification,
-    function() {
+    function () {
       notifyKeyboard(false);
     }
   );
@@ -99,13 +99,19 @@ function notifyKeyboard(isShown) {
 var notifyKeyboardActions = [];
 
 export default {
-  isShowing: function() {
+  isShowing: function () {
     return lastNotification;
   },
-  addNotifyKeyboardAction: function(callback) {
+  addNotifyKeyboardAction: function (callback) {
     notifyKeyboardActions.push(callback);
   },
-  refreshListener: function() {
+  removeNotifyKeyboardAction: function (callback) {
+    const index = notifyKeyboardActions.indexOf(callback);
+    if (index >= 0) {
+      notifyKeyboardActions.splice(index, 1);
+    }
+  },
+  refreshListener: function () {
     startTracking();
-  }
+  },
 };
